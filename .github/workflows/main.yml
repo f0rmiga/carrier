@@ -22,14 +22,6 @@ jobs:
           key: ${{ runner.os }}-tools
       - name: Install Tools
         run: make tools-install
-      - name: Read configuration
-        uses: hashicorp/vault-action@v2.0.1
-        with:
-          url: https://volt.cap.explore.suse.dev/
-          token: ${{ secrets.VAULT_TOKEN }}
-          secrets: |
-            secret/data/carrier "docker_registry_username"     | REGISTRY_USERNAME;
-            secret/data/carrier "docker_registry_password"     | REGISTRY_PASSWORD;
       - name: Add Tools to PATH
         run: |
           echo "`pwd`/output/bin" >> $GITHUB_PATH

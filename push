@@ -52,6 +52,19 @@ function enable_drone() {
     -H "Content-Type: application/json" > /dev/null
 }
 
+function registry_eirini() {
+  node_port=$(kubectl get svc container-registry --namespace carrier \
+    --output jsonpath='{.spec.ports[?(@.name == "registry")].nodePort}' \
+    2> /dev/null)
+
+  if [ -z "${node_port}" ]; then
+    >&2 say "Failed to get container registry node port..."
+    return 1
+  fi
+
+  echo "127.0.0.1:${node_port}"
+}
+
 function prepare_code() {
   target="$1"
   user="$2"
@@ -60,9 +73,6 @@ function prepare_code() {
   app_dir="$5"
 
   say "Preparing code ..."
-
-  image_user=$(registry_user)
-  image_password=$(registry_password)
 
   temp_dir=`mktemp -d`
   cp -a "$app_dir/." "$temp_dir"
@@ -81,6 +91,8 @@ EOF
 
   mkdir "$temp_dir/.kube"
 
+  registry_svc="container-registry.carrier.svc"
+
   cat <<EOF >> "$temp_dir/.kube/app.yml"
 ---
 apiVersion: kpack.io/v1alpha1
@@ -89,7 +101,7 @@ metadata:
   name: $app_name
   namespace: eirini-workloads
 spec:
-  tag: $image_user/carrier-$app_name
+  tag: ${registry_svc}/eirini-workloads/carrier-$app_name
   serviceAccount: app-serviceaccount
   builder:
     name: carrier-builder
@@ -116,7 +128,7 @@ spec:
     PORT: "8080"
   ports:
   - 8080
-  image: "$image_user/carrier-$app_name"
+  image: "$(registry_eirini)/eirini-workloads/carrier-$app_name"
 
 # INGRESS
 ---
@@ -204,14 +216,6 @@ function wait_for_app() {
 function get_target() {
   gitea_url=$(kubectl get configmap -n gitea config -o yaml | grep DOMAIN | head -n1 | awk '{print $3}')
   echo ${gitea_url:6}
-}
-
-function registry_user() {
-  kubectl get secret -n default dockerhub-creds -o jsonpath="{.data.\.dockerconfigjson}" | base64 -d | jq -r 'first(.auths[] | .username)'
-}
-
-function registry_password() {
-  kubectl get secret -n default dockerhub-creds -o jsonpath="{.data.\.dockerconfigjson}" | base64 -d | jq -r 'first(.auths[] | .password)'
 }
 
 function drone_api_token() {

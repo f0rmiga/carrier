@@ -3,7 +3,7 @@ apiVersion: quarks.cloudfoundry.org/v1alpha1
 kind: QuarksJob
 metadata:
   name: gitea-app
-  namespace: staging
+  namespace: carrier
 spec:
   template:
     backoffLimit: 6

@@ -4,15 +4,10 @@ function log() {
   echo -e "\e[35mkpack> \e[32m$1\e[39m"
 }
 
-username="$1"
-password="$2"
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-config_json=`echo -n "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"$username\",\"password\":\"$password\"}}}" | base64 -w 0`
-
-log "Setting up dockerhub credentials for kpack."
-template=`cat "$dir/dockerhub-creds.yaml" | sed -e "s/{{CONFIG_JSON}}/$config_json/g"`
-echo -n "$template" | kubectl apply -f - >> "$HOME/.carrier.log"
+log "Setting up container registry config for kpack."
+kubectl apply -f "$dir/container-registry-config.yaml" >> "$HOME/.carrier.log"
 
 log "Creating a service account for kpack."
 kubectl apply -f "$dir/service-account.yaml" >> "$HOME/.carrier.log"

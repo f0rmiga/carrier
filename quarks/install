@@ -10,5 +10,18 @@ helm repo add quarks https://cloudfoundry-incubator.github.io/quarks-helm/ >> "$
 log "Creating quarks namespace."
 kubectl create namespace quarks >> "$HOME/.carrier.log"
 
-log "Installing quarks."
-helm install quarks-operator quarks/cf-operator --version 6.1.17+0.gec409fd7 -n quarks >> "$HOME/.carrier.log"
+log "Installing quarks-secret."
+helm install quarks-secret quarks/quarks-secret \
+  --wait \
+  --version 1.0.752 \
+  --namespace quarks \
+  --set "global.monitoredID=carrier" \
+  >> "$HOME/.carrier.log"
+
+log "Installing quarks-job."
+helm install quarks-job quarks/quarks-job \
+  --wait \
+  --version 1.0.211 \
+  --namespace quarks \
+  --set "global.monitoredID=carrier" \
+  >> "$HOME/.carrier.log"

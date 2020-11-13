@@ -1,0 +1,13 @@
+#!/bin/bash
+
+function log() {
+  echo -e "\e[35mcontainer registry> \e[32m$1\e[39m"
+}
+
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+log "Installing..."
+
+helm install container-registry "${dir}/chart/container-registry" \
+  --create-namespace \
+  --namespace carrier
